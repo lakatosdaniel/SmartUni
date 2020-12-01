@@ -1,0 +1,39 @@
+enum PredictionKind {
+    STAGNATE,
+    INCREASE,
+    DECREASE
+};
+
+enum ActionKind {
+    HEAT,
+    COOL,
+    STOP
+};
+
+struct Temperature{
+  	long long TimeStamp;
+  	long SensorID;
+  	float Temperature;
+};
+
+struct WindowState{
+ 	long long TimeStamp;
+ 	long SensorID;
+	boolean IsOpen;
+};
+
+struct TimeTable{
+	long long TimeStamp;
+	long SensorID;
+	boolean IsEmpty;
+};
+
+struct PredictedTemperature{
+  	long long TimeStamp;
+  	PredictionKind Prediction;
+};
+
+struct Action{
+  	long long TimeStamp;
+  	ActionKind Action;
+};
