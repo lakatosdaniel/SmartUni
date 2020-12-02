@@ -94,11 +94,18 @@ public class TemperatureValidator {
 		
 		if(n > 1) {
 			// TODO: How to do this?
-			if (data.get(0).corresponds(data.get(1))) {
-				instance = new Temperature();
-				instance.SensorID = 1000;
-				instance.Temperature = Math.max(data.get(0).Temperature, data.get(1).Temperature);
-				instance.TimeStamp = Math.max(data.get(0).TimeStamp, data.get(1).TimeStamp);
+			Temperature data1 = data.get(0); 
+			Temperature data2 = data.get(1);
+			if (data1.corresponds(data2)) {
+				if (Math.abs(data1.Temperature - data2.Temperature) <= 3) {
+					instance = new Temperature();
+					instance.SensorID = 1000;
+					instance.Temperature = (data1.Temperature + data2.Temperature) / 2;
+					instance.TimeStamp = Math.max(data1.TimeStamp, data2.TimeStamp);
+				} else {
+					
+				}
+				
 				data = initData();
 			}
 		}

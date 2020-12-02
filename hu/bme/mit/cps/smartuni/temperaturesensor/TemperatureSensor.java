@@ -146,7 +146,7 @@ public class TemperatureSensor {
                 
         try {
 
-            File f = new File("/home/cps/Desktop/SmartUni/data/data.csv");
+            File f = new File("/home/cps/SmartUni/data/data.csv");
 
             BufferedReader b = new BufferedReader(new FileReader(f));
 
