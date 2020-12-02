@@ -71,6 +71,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -139,13 +140,10 @@ public class TemperatureSensor {
         Topic topic = null;
         TemperatureDataWriter writer = null;
         
-        ArrayList<Long> dataTimeStamp = new ArrayList<Long>(); 
-        ArrayList<Float> dataTemperature = new ArrayList<Float>(); 
+        ArrayList<Float> data = new ArrayList<Float>(); 
         
         System.out.println("Reading resource file...");
-        
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.DD hh:mm");
-        
+                
         try {
 
             File f = new File("/home/cps/Desktop/SmartUni/data/data.csv");
@@ -157,19 +155,11 @@ public class TemperatureSensor {
             while ((row = b.readLine()) != null) {
             	String[] columns = row.split(",");
             	
-            	try {
-                    Date date = dateFormat.parse(columns[0]);
-                    long milliseconds = date.getTime();
-                    dataTimeStamp.add(milliseconds);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            	
             	if (number == 0) {
-            		dataTemperature.add(Float.valueOf(columns[1]));
+            		data.add(Float.valueOf(columns[1]));
             	}
             	else {
-            		dataTemperature.add(Float.valueOf(columns[10]));
+            		data.add(Float.valueOf(columns[10]));
             	}
             }
 
@@ -243,7 +233,9 @@ public class TemperatureSensor {
             // --- Write --- //
 
             /* Create data sample for writing */
-            Temperature instance = new Temperature();            
+            Temperature instance = new Temperature();
+            
+            Calendar calendar = Calendar.getInstance();
             
             InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
             /* For a data type that has a key, if the same instance is going to be
@@ -251,7 +243,7 @@ public class TemperatureSensor {
             and register the keyed instance prior to writing */
             //instance_handle = writer.register_instance(instance);
             
-            final long sendPeriodMillis = 4 * 1000; // 10 seconds
+            final long sendPeriodMillis = 5 * 1000; // 5 seconds
 
             int n = 0;
             
@@ -260,12 +252,12 @@ public class TemperatureSensor {
                 /* Modify the instance to be written here */
 
                 instance.SensorID = number;
-                instance.Temperature = dataTemperature.get(n);
-                instance.TimeStamp = dataTimeStamp.get(n);
+                instance.Temperature = data.get(n);
+                instance.TimeStamp = calendar.getInstance().getTimeInMillis();
                 
                 n++;
                 
-                if(n == dataTemperature.size() || n == dataTimeStamp.size()) {
+                if(n == data.size()) {
                 	n = 0;
                 }
                 

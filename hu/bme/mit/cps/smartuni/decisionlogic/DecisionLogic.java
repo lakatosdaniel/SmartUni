@@ -84,10 +84,9 @@ public class DecisionLogic {
     	
     	if (temperature != null && timetable != null && windowstate != null) {
     		
-    		// TODO: Not sure if this should be like this...
-    		if (Math.abs((temperature.TimeStamp/1000)-(timetable.TimeStamp/1000)) <= 30 &&
-    				Math.abs((temperature.TimeStamp/1000)-(windowstate.TimeStamp/1000)) <= 30 &&
-    				Math.abs((timetable.TimeStamp/1000)-(windowstate.TimeStamp/1000)) <= 30) {
+    		if (Math.abs((temperature.TimeStamp/1000)-(timetable.TimeStamp/1000)) <= 5 &&
+    				Math.abs((temperature.TimeStamp/1000)-(windowstate.TimeStamp/1000)) <= 5 &&
+    				Math.abs((timetable.TimeStamp/1000)-(windowstate.TimeStamp/1000)) <= 5) {
     			action = new Action();
     		}
     		
@@ -237,7 +236,7 @@ public class DecisionLogic {
             }
             
             actionTopic = participant.create_topic(
-                "ActionTopic",
+                "RecommendedActionTopic",
                 actionTypeName, DomainParticipant.TOPIC_QOS_DEFAULT,
                 null /* listener */, StatusKind.STATUS_MASK_NONE);
             if (actionTopic == null) {
@@ -402,9 +401,7 @@ public class DecisionLogic {
 
                     if (info.valid_data) {
                         TimeTable instance = _dataSeq.get(i);
-                        if (instance.SourceID > 999) {
-							timetable = instance;
-						}
+						timetable = instance;
                     }
                 }
             } catch (RETCODE_NO_DATA noData) {
@@ -437,9 +434,7 @@ public class DecisionLogic {
 
                     if (info.valid_data) {
                         WindowState instance = _dataSeq.get(i);
-                        if (instance.SensorID > 999) {
-							windowstate = instance;
-						}
+						windowstate = instance;
                     }
                 }
             } catch (RETCODE_NO_DATA noData) {

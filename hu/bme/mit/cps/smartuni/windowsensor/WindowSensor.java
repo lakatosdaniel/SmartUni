@@ -71,6 +71,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Random;
@@ -143,36 +144,6 @@ public class WindowSensor {
         Topic topic = null;
         WindowStateDataWriter writer = null;
         
-        ArrayList<Long> dataTimeStamp = new ArrayList<Long>(); 
-        
-        System.out.println("Reading resource file...");
-        
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.DD hh:mm");
-        
-        try {
-
-            File f = new File("/home/cps/Desktop/SmartUni/data/data.csv");
-
-            BufferedReader b = new BufferedReader(new FileReader(f));
-
-            String row = "";
-
-            while ((row = b.readLine()) != null) {
-            	String[] columns = row.split(",");
-            	
-            	try {
-                    Date date = dateFormat.parse(columns[0]);
-                    long milliseconds = date.getTime();
-                    dataTimeStamp.add(milliseconds);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        
         System.out.println("Starting TemperaturePublisher...");
         
         try {
@@ -239,7 +210,9 @@ public class WindowSensor {
             // --- Write --- //
 
             /* Create data sample for writing */
-            WindowState instance = new WindowState();            
+            WindowState instance = new WindowState();
+            
+            Calendar calendar = Calendar.getInstance();
             
             InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
             /* For a data type that has a key, if the same instance is going to be
@@ -250,27 +223,19 @@ public class WindowSensor {
             Random random = new Random();
             Boolean isOpen = random.nextBoolean();
             
-            final long sendPeriodMillis = 4 * 1000; // 4 seconds
-
-            int n = 0;
+            final long sendPeriodMillis = 5 * 1000; // 5 seconds
             
             for (int count = 0; (sampleCount == 0) || (count < sampleCount); ++count) {
 
                 /* Modify the instance to be written here */
             	
-            	if (n % 10 == 0) {
+            	if (count % 10 == 0) {
             		isOpen = random.nextBoolean();
             	}
 
                 instance.SensorID = number;
                 instance.IsOpen = isOpen;
-                instance.TimeStamp = dataTimeStamp.get(n);
-                
-                n++;
-                
-                if(n == dataTimeStamp.size()) {
-                	n = 0;
-                }
+                instance.TimeStamp = calendar.getInstance().getTimeInMillis();                
                 
                 System.out.println("Writing WindowState" + instance.toString());
                 

@@ -72,7 +72,7 @@ public class Temperature   implements Copyable, Serializable{
         return true;
     }
     
-    public boolean valueEquals(Object o) {
+    public boolean corresponds(Object o) {
 
         if (o == null) {
             return false;
@@ -84,11 +84,7 @@ public class Temperature   implements Copyable, Serializable{
 
         Temperature otherObj = (Temperature)o;
 
-        if (Math.abs((TimeStamp/1000)-(otherObj.TimeStamp/1000)) >= 30) {
-            return false;
-        }
-        
-        if (Temperature != otherObj.Temperature) {
+        if (Math.abs((TimeStamp/1000)-(otherObj.TimeStamp/1000)) >= 5) {
             return false;
         }
 
