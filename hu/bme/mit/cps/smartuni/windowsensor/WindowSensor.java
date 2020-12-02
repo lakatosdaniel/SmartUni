@@ -10,7 +10,7 @@
 * to use the software.
 */
 
-package hu.bme.mit.cps.smartuni.temperaturesensor;
+package hu.bme.mit.cps.smartuni.windowsensor;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -73,6 +73,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Random;
 
 import com.rti.dds.domain.*;
 import com.rti.dds.infrastructure.*;
@@ -83,10 +84,13 @@ import com.rti.ndds.config.*;
 import hu.bme.mit.cps.smartuni.Temperature;
 import hu.bme.mit.cps.smartuni.TemperatureDataWriter;
 import hu.bme.mit.cps.smartuni.TemperatureTypeSupport;
+import hu.bme.mit.cps.smartuni.WindowState;
+import hu.bme.mit.cps.smartuni.WindowStateDataWriter;
+import hu.bme.mit.cps.smartuni.WindowStateTypeSupport;
 
 // ===========================================================================
 
-public class TemperatureSensor {
+public class WindowSensor {
 	private static int number = 0;
 	
     // -----------------------------------------------------------------------
@@ -126,7 +130,7 @@ public class TemperatureSensor {
 
     // --- Constructors: -----------------------------------------------------
 
-    private TemperatureSensor() {
+    private WindowSensor() {
         super();
     }
 
@@ -137,10 +141,9 @@ public class TemperatureSensor {
         DomainParticipant participant = null;
         Publisher publisher = null;
         Topic topic = null;
-        TemperatureDataWriter writer = null;
+        WindowStateDataWriter writer = null;
         
         ArrayList<Long> dataTimeStamp = new ArrayList<Long>(); 
-        ArrayList<Float> dataTemperature = new ArrayList<Float>(); 
         
         System.out.println("Reading resource file...");
         
@@ -164,13 +167,6 @@ public class TemperatureSensor {
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
-            	
-            	if (number == 0) {
-            		dataTemperature.add(Float.valueOf(columns[1]));
-            	}
-            	else {
-            		dataTemperature.add(Float.valueOf(columns[10]));
-            	}
             }
 
         } catch (IOException e) {
@@ -211,14 +207,14 @@ public class TemperatureSensor {
             // --- Create topic --- //
 
             /* Register type before creating topic */
-            String typeName = TemperatureTypeSupport.get_type_name();
-            TemperatureTypeSupport.register_type(participant, typeName);
+            String typeName = WindowStateTypeSupport.get_type_name();
+            WindowStateTypeSupport.register_type(participant, typeName);
 
             /* To customize topic QoS, use
             the configuration file USER_QOS_PROFILES.xml */
 
             topic = participant.create_topic(
-                "TemperatureTopic",
+                "WindowStateTopic",
                 typeName, DomainParticipant.TOPIC_QOS_DEFAULT,
                 null /* listener */, StatusKind.STATUS_MASK_NONE);
             if (topic == null) {
@@ -231,7 +227,7 @@ public class TemperatureSensor {
             /* To customize data writer QoS, use
             the configuration file USER_QOS_PROFILES.xml */
 
-            writer = (TemperatureDataWriter)
+            writer = (WindowStateDataWriter)
             publisher.create_datawriter(
                 topic, Publisher.DATAWRITER_QOS_DEFAULT,
                 null /* listener */, StatusKind.STATUS_MASK_NONE);
@@ -243,7 +239,7 @@ public class TemperatureSensor {
             // --- Write --- //
 
             /* Create data sample for writing */
-            Temperature instance = new Temperature();            
+            WindowState instance = new WindowState();            
             
             InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
             /* For a data type that has a key, if the same instance is going to be
@@ -251,25 +247,32 @@ public class TemperatureSensor {
             and register the keyed instance prior to writing */
             //instance_handle = writer.register_instance(instance);
             
-            final long sendPeriodMillis = 4 * 1000; // 10 seconds
+            Random random = new Random();
+            Boolean isOpen = random.nextBoolean();
+            
+            final long sendPeriodMillis = 4 * 1000; // 4 seconds
 
             int n = 0;
             
             for (int count = 0; (sampleCount == 0) || (count < sampleCount); ++count) {
 
                 /* Modify the instance to be written here */
+            	
+            	if (n % 10 == 0) {
+            		isOpen = random.nextBoolean();
+            	}
 
                 instance.SensorID = number;
-                instance.Temperature = dataTemperature.get(n);
+                instance.IsOpen = isOpen;
                 instance.TimeStamp = dataTimeStamp.get(n);
                 
                 n++;
                 
-                if(n == dataTemperature.size() || n == dataTimeStamp.size()) {
+                if(n == dataTimeStamp.size()) {
                 	n = 0;
                 }
                 
-                System.out.println("Writing Temperature" + instance.toString());
+                System.out.println("Writing WindowState" + instance.toString());
                 
                 /* Write data */
                 writer.write(instance, instance_handle);

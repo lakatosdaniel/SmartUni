@@ -19,8 +19,8 @@ import com.rti.dds.cdr.CdrHelper;
 public class TimeTable   implements Copyable, Serializable{
 
     public long TimeStamp = (long)0;
-    public int SensorID = (int)0;
-    public boolean IsEmpty = (boolean)false;
+    public int SourceID = (int)0;
+    public boolean Lecture = (boolean)false;
 
     public TimeTable() {
 
@@ -43,8 +43,8 @@ public class TimeTable   implements Copyable, Serializable{
     public void clear() {
 
         TimeStamp = (long)0;
-        SensorID = (int)0;
-        IsEmpty = (boolean)false;
+        SourceID = (int)0;
+        Lecture = (boolean)false;
     }
 
     public boolean equals(Object o) {
@@ -62,10 +62,10 @@ public class TimeTable   implements Copyable, Serializable{
         if(TimeStamp != otherObj.TimeStamp) {
             return false;
         }
-        if(SensorID != otherObj.SensorID) {
+        if(SourceID != otherObj.SourceID) {
             return false;
         }
-        if(IsEmpty != otherObj.IsEmpty) {
+        if(Lecture != otherObj.Lecture) {
             return false;
         }
 
@@ -75,8 +75,8 @@ public class TimeTable   implements Copyable, Serializable{
     public int hashCode() {
         int __result = 0;
         __result += (int)TimeStamp;
-        __result += (int)SensorID;
-        __result += (IsEmpty == true)?1:0;
+        __result += (int)SourceID;
+        __result += (Lecture == true)?1:0;
         return __result;
     }
 
@@ -100,8 +100,8 @@ public class TimeTable   implements Copyable, Serializable{
         TimeTable typedDst = this;
 
         typedDst.TimeStamp = typedSrc.TimeStamp;
-        typedDst.SensorID = typedSrc.SensorID;
-        typedDst.IsEmpty = typedSrc.IsEmpty;
+        typedDst.SourceID = typedSrc.SourceID;
+        typedDst.Lecture = typedSrc.Lecture;
 
         return this;
     }
@@ -121,9 +121,9 @@ public class TimeTable   implements Copyable, Serializable{
         CdrHelper.printIndent(strBuffer, indent+1);        
         strBuffer.append("TimeStamp: ").append(TimeStamp).append("\n");  
         CdrHelper.printIndent(strBuffer, indent+1);        
-        strBuffer.append("SensorID: ").append(SensorID).append("\n");  
+        strBuffer.append("SourceID: ").append(SourceID).append("\n");  
         CdrHelper.printIndent(strBuffer, indent+1);        
-        strBuffer.append("IsEmpty: ").append(IsEmpty).append("\n");  
+        strBuffer.append("Lecture: ").append(Lecture).append("\n");  
 
         return strBuffer.toString();
     }

@@ -10,7 +10,7 @@
 * to use the software.
 */
 
-package hu.bme.mit.cps.smartuni.temperaturesensor;
+package hu.bme.mit.cps.smartuni.timetable;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -83,10 +83,13 @@ import com.rti.ndds.config.*;
 import hu.bme.mit.cps.smartuni.Temperature;
 import hu.bme.mit.cps.smartuni.TemperatureDataWriter;
 import hu.bme.mit.cps.smartuni.TemperatureTypeSupport;
+import hu.bme.mit.cps.smartuni.TimeTable;
+import hu.bme.mit.cps.smartuni.TimeTableDataWriter;
+import hu.bme.mit.cps.smartuni.TimeTableTypeSupport;
 
 // ===========================================================================
 
-public class TemperatureSensor {
+public class TimeTableSource {
 	private static int number = 0;
 	
     // -----------------------------------------------------------------------
@@ -126,7 +129,7 @@ public class TemperatureSensor {
 
     // --- Constructors: -----------------------------------------------------
 
-    private TemperatureSensor() {
+    private TimeTableSource() {
         super();
     }
 
@@ -137,10 +140,10 @@ public class TemperatureSensor {
         DomainParticipant participant = null;
         Publisher publisher = null;
         Topic topic = null;
-        TemperatureDataWriter writer = null;
+        TimeTableDataWriter writer = null;
         
         ArrayList<Long> dataTimeStamp = new ArrayList<Long>(); 
-        ArrayList<Float> dataTemperature = new ArrayList<Float>(); 
+        ArrayList<Boolean> dataLecture = new ArrayList<Boolean>(); 
         
         System.out.println("Reading resource file...");
         
@@ -165,19 +168,14 @@ public class TemperatureSensor {
                     e.printStackTrace();
                 }
             	
-            	if (number == 0) {
-            		dataTemperature.add(Float.valueOf(columns[1]));
-            	}
-            	else {
-            		dataTemperature.add(Float.valueOf(columns[10]));
-            	}
+            	dataLecture.add(Boolean.valueOf(columns[24]));
             }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
         
-        System.out.println("Starting TemperaturePublisher...");
+        System.out.println("Starting TimeTablePublisher...");
         
         try {
             // --- Create participant --- //
@@ -211,14 +209,14 @@ public class TemperatureSensor {
             // --- Create topic --- //
 
             /* Register type before creating topic */
-            String typeName = TemperatureTypeSupport.get_type_name();
-            TemperatureTypeSupport.register_type(participant, typeName);
+            String typeName = TimeTableTypeSupport.get_type_name();
+            TimeTableTypeSupport.register_type(participant, typeName);
 
             /* To customize topic QoS, use
             the configuration file USER_QOS_PROFILES.xml */
 
             topic = participant.create_topic(
-                "TemperatureTopic",
+                "TimeTableTopic",
                 typeName, DomainParticipant.TOPIC_QOS_DEFAULT,
                 null /* listener */, StatusKind.STATUS_MASK_NONE);
             if (topic == null) {
@@ -231,7 +229,7 @@ public class TemperatureSensor {
             /* To customize data writer QoS, use
             the configuration file USER_QOS_PROFILES.xml */
 
-            writer = (TemperatureDataWriter)
+            writer = (TimeTableDataWriter)
             publisher.create_datawriter(
                 topic, Publisher.DATAWRITER_QOS_DEFAULT,
                 null /* listener */, StatusKind.STATUS_MASK_NONE);
@@ -243,7 +241,7 @@ public class TemperatureSensor {
             // --- Write --- //
 
             /* Create data sample for writing */
-            Temperature instance = new Temperature();            
+            TimeTable instance = new TimeTable();            
             
             InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
             /* For a data type that has a key, if the same instance is going to be
@@ -251,7 +249,7 @@ public class TemperatureSensor {
             and register the keyed instance prior to writing */
             //instance_handle = writer.register_instance(instance);
             
-            final long sendPeriodMillis = 4 * 1000; // 10 seconds
+            final long sendPeriodMillis = 4 * 1000; // 4 seconds
 
             int n = 0;
             
@@ -259,17 +257,17 @@ public class TemperatureSensor {
 
                 /* Modify the instance to be written here */
 
-                instance.SensorID = number;
-                instance.Temperature = dataTemperature.get(n);
+                instance.SourceID = number;
+                instance.Lecture = dataLecture.get(n);
                 instance.TimeStamp = dataTimeStamp.get(n);
                 
                 n++;
                 
-                if(n == dataTemperature.size() || n == dataTimeStamp.size()) {
+                if(n == dataLecture.size() || n == dataTimeStamp.size()) {
                 	n = 0;
                 }
                 
-                System.out.println("Writing Temperature" + instance.toString());
+                System.out.println("Writing TimeTable" + instance.toString());
                 
                 /* Write data */
                 writer.write(instance, instance_handle);

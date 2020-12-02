@@ -356,8 +356,8 @@ public class TimeTableTypeSupport extends TypeSupportImpl {
             TimeTable typedSrc = (TimeTable) src;
 
             dst.writeLong(typedSrc.TimeStamp);
-            dst.writeInt(typedSrc.SensorID);
-            dst.writeBoolean(typedSrc.IsEmpty);
+            dst.writeInt(typedSrc.SourceID);
+            dst.writeBoolean(typedSrc.Lecture);
             if(!xcdr1){            
                 if (dheaderPosition != -1) {
                     dst.setDHeader(dheaderPosition);
@@ -468,8 +468,8 @@ public class TimeTableTypeSupport extends TypeSupportImpl {
                 TimeTable typedSrc = (TimeTable) src;      
                 dst.inBaseClass = false;
                 dst.writeLong(typedSrc.TimeStamp);
-                dst.writeInt(typedSrc.SensorID);
-                dst.writeBoolean(typedSrc.IsEmpty);
+                dst.writeInt(typedSrc.SourceID);
+                dst.writeBoolean(typedSrc.Lecture);
             }
 
             if (serialize_encapsulation) {
@@ -521,8 +521,8 @@ public class TimeTableTypeSupport extends TypeSupportImpl {
 
             try{
                 typedDst.TimeStamp = src.readLong();
-                typedDst.SensorID = src.readInt();
-                typedDst.IsEmpty = src.readBoolean();
+                typedDst.SourceID = src.readInt();
+                typedDst.Lecture = src.readBoolean();
 
             } catch (IllegalCdrStateException stateEx) {
                 if (src.available() >= CdrEncapsulation.CDR_ENCAPSULATION_PARAMETER_ID_ALIGNMENT) {

@@ -30,10 +30,10 @@ public class  TimeTableTypeCode {
         memberAnnotation.default_annotation(AnnotationParameterValue.ZERO_LONG);
         memberAnnotation.min_annotation(AnnotationParameterValue.MIN_LONG);
         memberAnnotation.max_annotation(AnnotationParameterValue.MAX_LONG);
-        sm[__i] = new  StructMember("SensorID", false, (short)-1,  false, TypeCode.TC_LONG, 1, false, memberAnnotation);__i++;
+        sm[__i] = new  StructMember("SourceID", false, (short)-1,  false, TypeCode.TC_LONG, 1, false, memberAnnotation);__i++;
         memberAnnotation = new Annotations();
         memberAnnotation.default_annotation(AnnotationParameterValue.FALSE_BOOLEAN);
-        sm[__i] = new  StructMember("IsEmpty", false, (short)-1,  false, TypeCode.TC_BOOLEAN, 2, false, memberAnnotation);__i++;
+        sm[__i] = new  StructMember("Lecture", false, (short)-1,  false, TypeCode.TC_BOOLEAN, 2, false, memberAnnotation);__i++;
 
         Annotations annotation = new Annotations();
         annotation.allowed_data_representation_mask(5);

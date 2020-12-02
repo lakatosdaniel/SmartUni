@@ -71,6 +71,29 @@ public class Temperature   implements Copyable, Serializable{
 
         return true;
     }
+    
+    public boolean valueEquals(Object o) {
+
+        if (o == null) {
+            return false;
+        }        
+
+        if(getClass() != o.getClass()) {
+            return false;
+        }
+
+        Temperature otherObj = (Temperature)o;
+
+        if (Math.abs((TimeStamp/1000)-(otherObj.TimeStamp/1000)) >= 30) {
+            return false;
+        }
+        
+        if (Temperature != otherObj.Temperature) {
+            return false;
+        }
+
+        return true;
+    }
 
     public int hashCode() {
         int __result = 0;

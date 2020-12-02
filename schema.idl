@@ -24,8 +24,8 @@ struct WindowState{
 
 struct TimeTable{
 	long long TimeStamp;
-	long SensorID;
-	boolean IsEmpty;
+	long SourceID;
+	boolean Lecture;
 };
 
 struct PredictedTemperature{
