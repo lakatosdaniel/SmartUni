@@ -1,16 +1,12 @@
 package hu.bme.mit.cps.smartuni.temperaturevalidator;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import com.rti.dds.domain.*;
 import com.rti.dds.infrastructure.*;
 import com.rti.dds.publication.Publisher;
 import com.rti.dds.subscription.*;
 import com.rti.dds.topic.*;
-import com.rti.ndds.config.*;
 
 import hu.bme.mit.cps.smartuni.Temperature;
 import hu.bme.mit.cps.smartuni.TemperatureDataReader;
@@ -72,14 +68,13 @@ public class TemperatureValidator {
     	return list;
 	}
     
-    private static void printData() {
-    	
+    /*private static void printData() {
     	System.out.println("-----------------------------------");
     	
 		for(int i = 0; i < data.size(); i++) {
 			System.out.println(data.get(i).toString());
 		}
-	}
+	}*/
         
     private static Temperature validate() {
     	int n = 0;

@@ -64,26 +64,14 @@ java -Djava.ext.dirs=$NDDSHOME/lib/java ActionPublisher <domain_id>
 
 java -Djava.ext.dirs=$NDDSHOME/lib/java ActionSubscriber <domain_id>        
 */
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
 
 import com.rti.dds.domain.*;
 import com.rti.dds.infrastructure.*;
 import com.rti.dds.publication.*;
 import com.rti.dds.topic.*;
-import com.rti.ndds.config.*;
 
-import hu.bme.mit.cps.smartuni.Temperature;
-import hu.bme.mit.cps.smartuni.TemperatureDataWriter;
-import hu.bme.mit.cps.smartuni.TemperatureTypeSupport;
 import hu.bme.mit.cps.smartuni.TimeTable;
 import hu.bme.mit.cps.smartuni.TimeTableDataWriter;
 import hu.bme.mit.cps.smartuni.TimeTableTypeSupport;
@@ -149,7 +137,7 @@ public class TimeTableSource {
                 
         try {
 
-            File f = new File("/home/cps/Desktop/SmartUni/data/data.csv");
+            File f = new File("/home/cps/SmartUni/data/data.csv");
 
             BufferedReader b = new BufferedReader(new FileReader(f));
 
@@ -159,6 +147,8 @@ public class TimeTableSource {
             	String[] columns = row.split(",");
             	data.add(Boolean.valueOf(columns[24]));
             }
+            
+            b.close();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -231,9 +221,7 @@ public class TimeTableSource {
 
             /* Create data sample for writing */
             TimeTable instance = new TimeTable(); 
-            
-            Calendar calendar = Calendar.getInstance();
-            
+                        
             InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
             /* For a data type that has a key, if the same instance is going to be
             written multiple times, initialize the key here
@@ -250,7 +238,7 @@ public class TimeTableSource {
 
                 instance.SourceID = number;
                 instance.Lecture = data.get(n);
-                instance.TimeStamp = calendar.getInstance().getTimeInMillis();
+                instance.TimeStamp = Calendar.getInstance().getTimeInMillis();
                 
                 n++;
                 

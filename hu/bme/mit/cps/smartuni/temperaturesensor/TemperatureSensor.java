@@ -64,22 +64,13 @@ java -Djava.ext.dirs=$NDDSHOME/lib/java ActionPublisher <domain_id>
 
 java -Djava.ext.dirs=$NDDSHOME/lib/java ActionSubscriber <domain_id>        
 */
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
 
 import com.rti.dds.domain.*;
 import com.rti.dds.infrastructure.*;
 import com.rti.dds.publication.*;
 import com.rti.dds.topic.*;
-import com.rti.ndds.config.*;
 
 import hu.bme.mit.cps.smartuni.Temperature;
 import hu.bme.mit.cps.smartuni.TemperatureDataWriter;
@@ -162,6 +153,7 @@ public class TemperatureSensor {
             		data.add(Float.valueOf(columns[10]));
             	}
             }
+            b.close();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -235,8 +227,6 @@ public class TemperatureSensor {
             /* Create data sample for writing */
             Temperature instance = new Temperature();
             
-            Calendar calendar = Calendar.getInstance();
-            
             InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
             /* For a data type that has a key, if the same instance is going to be
             written multiple times, initialize the key here
@@ -253,7 +243,7 @@ public class TemperatureSensor {
 
                 instance.SensorID = number;
                 instance.Temperature = data.get(n);
-                instance.TimeStamp = calendar.getInstance().getTimeInMillis();
+                instance.TimeStamp = Calendar.getInstance().getTimeInMillis();
                 
                 n++;
                 
