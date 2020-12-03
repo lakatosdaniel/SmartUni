@@ -74,7 +74,8 @@ public class DecisionLogic {
 	}*/
     
     private static Action decide() {
-    	Action action = null;
+    	Action action = new Action();
+    	action.Action = ActionKind.STOP;
     	
     	if (temperature != null && timetable != null && windowstate != null) {
     		
@@ -111,6 +112,73 @@ public class DecisionLogic {
         		}
         		action.TimeStamp = Math.max(Math.max(temperature.TimeStamp, timetable.TimeStamp), windowstate.TimeStamp);
         	}
+    	}
+    	else if (temperature != null && timetable != null) {
+    		System.out.println("Warning, no window data available!");
+    		if (Math.abs((temperature.TimeStamp/1000)-(timetable.TimeStamp/1000)) <= 5) {
+    			action = new Action();
+    			if (timetable.Lecture) {
+    				if (temperature.Temperature > 22) {
+    					action.Action = ActionKind.COOL;
+    				}
+    				else if (temperature.Temperature < 16) {
+    					action.Action = ActionKind.HEAT;
+    				}
+    				else {
+    					action.Action = ActionKind.STOP;
+    				}
+    			}
+    			else {
+    				if (temperature.Temperature > 26) {
+    					action.Action = ActionKind.COOL;
+    				}
+    				else if (temperature.Temperature < 14) {
+    					action.Action = ActionKind.HEAT;
+    				}
+    				else {
+    					action.Action = ActionKind.STOP;
+    				}
+    			}
+        		action.TimeStamp = Math.max(temperature.TimeStamp, timetable.TimeStamp);
+        	}
+    	}
+    	else if (temperature != null && windowstate != null) {
+    		System.out.println("Warning, no timetable data available!");
+    		if (Math.abs((temperature.TimeStamp/1000)-(windowstate.TimeStamp/1000)) <= 5) {
+    			action = new Action();
+    			if (windowstate.IsOpen) {
+        			action.Action = ActionKind.STOP;
+        		}
+        		else {
+    				if (temperature.Temperature > 22) {
+    					action.Action = ActionKind.COOL;
+    				}
+    				else if (temperature.Temperature < 16) {
+    					action.Action = ActionKind.HEAT;
+    				}
+    				else {
+    					action.Action = ActionKind.STOP;
+    				}
+    			}
+        		action.TimeStamp = Math.max(temperature.TimeStamp, windowstate.TimeStamp);
+        	}
+    	}
+    	else if (temperature != null) {
+    		System.out.println("Warning, no timetable and window data available!");
+			action = new Action();
+			if (temperature.Temperature > 22) {
+				action.Action = ActionKind.COOL;
+			}
+			else if (temperature.Temperature < 16) {
+				action.Action = ActionKind.HEAT;
+			}
+			else {
+				action.Action = ActionKind.STOP;
+			}
+    		action.TimeStamp = temperature.TimeStamp;
+    	}
+    	else {
+    		System.out.println("Error, no data is available!");
     	}
     	return action;
     }

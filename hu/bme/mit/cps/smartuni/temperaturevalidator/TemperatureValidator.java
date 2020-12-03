@@ -103,6 +103,21 @@ public class TemperatureValidator {
 				data = initData();
 			}
 		}
+		else {
+			System.out.println("Warning, only one sensor data is available.");
+			if (data.get(0).SensorID == 0) {
+				instance = new Temperature();
+				instance.SensorID = 1001;
+				instance.Temperature = data.get(0).Temperature;
+				instance.TimeStamp = data.get(0).TimeStamp;
+			}
+			else if (data.get(1).SensorID == 1) {
+				instance = new Temperature();
+				instance.SensorID = 1002;
+				instance.Temperature = data.get(1).Temperature;
+				instance.TimeStamp = data.get(1).TimeStamp;
+			}
+		}
     	
     	return instance;
 	}
