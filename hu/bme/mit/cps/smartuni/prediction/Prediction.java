@@ -111,8 +111,9 @@ public class Prediction {
     		prediction = new PredictedTemperature();
     		double outsideTemp = getOutsideTemperature(API_KEY, LOCATION);
     		if(outsideTemp == 200) {
-    			//TODO
-    		}else {
+    			System.out.println("Error, invalid API data.");
+    		}
+    		else {
     			if(Math.abs(insideTemperature.Temperature - outsideTemp) < 5.0) {
         			prediction.Prediction = PredictionKind.STAGNATE;
         		} else if(outsideTemp > insideTemperature.Temperature) {
@@ -258,7 +259,7 @@ public class Prediction {
 
             	instance = predict(); 
             	if (instance != null) {
-					System.out.println("Predicted temperature change" + instance.toString());
+					System.out.println("Predicted Temperature Change" + instance.toString());
 					/* Write data */
 	                predictionWriter.write(instance, instance_handle);
 				}

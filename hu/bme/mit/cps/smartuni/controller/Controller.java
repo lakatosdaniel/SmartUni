@@ -1,5 +1,7 @@
-package hu.bme.mit.cps.smartuni.decisionlogic;
+package hu.bme.mit.cps.smartuni.controller;
 
+
+import java.awt.event.ActionListener;
 
 import com.rti.dds.domain.*;
 import com.rti.dds.infrastructure.*;
@@ -8,8 +10,10 @@ import com.rti.dds.subscription.*;
 import com.rti.dds.topic.*;
 
 import hu.bme.mit.cps.smartuni.Action;
+import hu.bme.mit.cps.smartuni.ActionDataReader;
 import hu.bme.mit.cps.smartuni.ActionDataWriter;
 import hu.bme.mit.cps.smartuni.ActionKind;
+import hu.bme.mit.cps.smartuni.ActionSeq;
 import hu.bme.mit.cps.smartuni.ActionTypeSupport;
 import hu.bme.mit.cps.smartuni.Temperature;
 import hu.bme.mit.cps.smartuni.TemperatureDataReader;
@@ -26,7 +30,7 @@ import hu.bme.mit.cps.smartuni.WindowStateTypeSupport;
 
 // ===========================================================================
 
-public class DecisionLogic {
+public class Controller {
     // -----------------------------------------------------------------------
     // Public Methods
     // -----------------------------------------------------------------------
@@ -58,66 +62,41 @@ public class DecisionLogic {
     // Private Methods
     // -----------------------------------------------------------------------
 
-    private static Temperature temperature = null;
-    private static TimeTable timetable = null;
-    private static WindowState windowstate = null;
+    private static Action finalAction = null;
+    private static Action recommendedAction = null;
     
     
     /*private static void initData() {
-    	temperature = null;
-    	timetable = null;
-    	windowstate = null;
+    	finalAction = null;
+    	recommendedAction = null;
     }
     
     private static void printData() {
 		System.out.print("Temperature " + temperature.toString() + "\nTimeTable " + timetable.toString() + "\nWindowState " + windowstate.toString());
 	}*/
     
-    private static Action decide() {
-    	Action action = null;
+    private static void control() {
+    	Action basicAction = new Action();
+    	basicAction.Action = ActionKind.STOP;
     	
-    	if (temperature != null && timetable != null && windowstate != null) {
-    		
-    		if (Math.abs((temperature.TimeStamp/1000)-(timetable.TimeStamp/1000)) <= 5 &&
-    				Math.abs((temperature.TimeStamp/1000)-(windowstate.TimeStamp/1000)) <= 5 &&
-    				Math.abs((timetable.TimeStamp/1000)-(windowstate.TimeStamp/1000)) <= 5) {
-    			action = new Action();
-    			if (windowstate.IsOpen) {
-        			action.Action = ActionKind.STOP;
-        		}
-        		else {
-        			if (timetable.Lecture) {
-        				if (temperature.Temperature > 22) {
-        					action.Action = ActionKind.COOL;
-        				}
-        				else if (temperature.Temperature < 16) {
-        					action.Action = ActionKind.HEAT;
-        				}
-        				else {
-        					action.Action = ActionKind.STOP;
-        				}
-        			}
-        			else {
-        				if (temperature.Temperature > 26) {
-        					action.Action = ActionKind.COOL;
-        				}
-        				else if (temperature.Temperature < 14) {
-        					action.Action = ActionKind.HEAT;
-        				}
-        				else {
-        					action.Action = ActionKind.STOP;
-        				}
-        			}
-        		}
-        		action.TimeStamp = Math.max(Math.max(temperature.TimeStamp, timetable.TimeStamp), windowstate.TimeStamp);
-        	}
+    	if (finalAction != null && recommendedAction != null) {
+    		System.out.println("Optimized decision available!");
+    		System.out.println("Controller Action" + finalAction.toString());
     	}
-    	return action;
+    	else if (recommendedAction != null) {
+    		System.out.println("Warning, optimized decision unavailable!");
+    		System.out.println("Controller Action" + recommendedAction.toString());
+    	}
+    	else {
+    		System.out.println("Error, no data available!");
+    		System.out.println("Controller Action" + basicAction.toString());
+    	}
+    		
     }
     
     // --- Constructors: -----------------------------------------------------
 
-    private DecisionLogic() {
+    private Controller() {
         super();
     }
 
@@ -127,18 +106,12 @@ public class DecisionLogic {
 
         DomainParticipant participant = null;
         Subscriber subscriber = null;
-        Publisher publisher = null;
-        Topic temperatureTopic = null;
-        Topic timetableTopic = null;
-        Topic windowstateTopic = null;
-        Topic actionTopic = null;
-        TemperatureListener temperatureListener = null;
-        TimeTableListener timetableListener = null;
-        WindowStateListener windowstateListener = null;
-        TemperatureDataReader temperatureReader = null;
-        TimeTableDataReader timetableReader = null;
-        WindowStateDataReader windowstateReader = null;
-        ActionDataWriter actionWriter = null;
+        Topic finalActionTopic = null;
+        Topic recommendedActionTopic = null;
+        FinalActionListener finalActionListener = null;
+        RecommendedActionListener recommendedActionListener = null;
+        ActionDataReader finalActionReader = null;
+        ActionDataReader recommendedActionReader = null;
         
         try {
 
@@ -157,20 +130,6 @@ public class DecisionLogic {
                 return;
             } 
             
-            // --- Create publisher --- //
-
-            /* To customize publisher QoS, use
-            the configuration file USER_QOS_PROFILES.xml */
-
-            publisher = participant.create_publisher(
-                DomainParticipant.PUBLISHER_QOS_DEFAULT, null /* listener */,
-                StatusKind.STATUS_MASK_NONE);
-            if (publisher == null) {
-                System.err.println("create_publisher error\n");
-                return;
-            }  
-            
-
             // --- Create subscriber --- //
 
             /* To customize subscriber QoS, use
@@ -187,103 +146,54 @@ public class DecisionLogic {
             // --- Create topic --- //
 
             /* Register type before creating topic */
-            String temperatureTypeName = TemperatureTypeSupport.get_type_name(); 
-            TemperatureTypeSupport.register_type(participant, temperatureTypeName);
-            String timetableTypeName = TimeTableTypeSupport.get_type_name(); 
-            TimeTableTypeSupport.register_type(participant, timetableTypeName);
-            String windowstateTypeName = WindowStateTypeSupport.get_type_name(); 
-            WindowStateTypeSupport.register_type(participant, windowstateTypeName);
             String actionTypeName = ActionTypeSupport.get_type_name(); 
             ActionTypeSupport.register_type(participant, actionTypeName);
 
             /* To customize topic QoS, use
             the configuration file USER_QOS_PROFILES.xml */
 
-            temperatureTopic = participant.create_topic(
-                "TemperatureTopic",
-                temperatureTypeName, DomainParticipant.TOPIC_QOS_DEFAULT,
+            finalActionTopic = participant.create_topic(
+                "ActionTopic",
+                actionTypeName, DomainParticipant.TOPIC_QOS_DEFAULT,
                 null /* listener */, StatusKind.STATUS_MASK_NONE);
-            if (temperatureTopic == null) {
+            if (finalActionTopic == null) {
                 System.err.println("create_topic error\n");
                 return;
             }
             
-            timetableTopic = participant.create_topic(
-                "TimeTableTopic",
-                timetableTypeName, DomainParticipant.TOPIC_QOS_DEFAULT,
-                null /* listener */, StatusKind.STATUS_MASK_NONE);
-            if (timetableTopic == null) {
-                System.err.println("create_topic error\n");
-                return;
-            }
-            
-            windowstateTopic = participant.create_topic(
-                "WindowStateTopic",
-                windowstateTypeName, DomainParticipant.TOPIC_QOS_DEFAULT,
-                null /* listener */, StatusKind.STATUS_MASK_NONE);
-            if (windowstateTopic == null) {
-                System.err.println("create_topic error\n");
-                return;
-            }
-            
-            actionTopic = participant.create_topic(
+            recommendedActionTopic = participant.create_topic(
                 "RecommendedActionTopic",
                 actionTypeName, DomainParticipant.TOPIC_QOS_DEFAULT,
                 null /* listener */, StatusKind.STATUS_MASK_NONE);
-            if (actionTopic == null) {
+            if (recommendedActionTopic == null) {
                 System.err.println("create_topic error\n");
                 return;
             }
 
             // --- Create reader --- //
 
-            temperatureListener = new TemperatureListener();
+            finalActionListener = new FinalActionListener();
 
             /* To customize data reader QoS, use
             the configuration file USER_QOS_PROFILES.xml */
 
-            temperatureReader = (TemperatureDataReader)
+            finalActionReader = (ActionDataReader)
             subscriber.create_datareader(
-                temperatureTopic, Subscriber.DATAREADER_QOS_DEFAULT, temperatureListener,
+                finalActionTopic, Subscriber.DATAREADER_QOS_DEFAULT, finalActionListener,
                 StatusKind.STATUS_MASK_ALL);
-            if (temperatureReader == null) {
+            if (finalActionReader == null) {
                 System.err.println("create_datareader error\n");
                 return;
             }   
             
-            timetableListener = new TimeTableListener();
+            recommendedActionListener = new RecommendedActionListener();
             
-            timetableReader = (TimeTableDataReader)
+            recommendedActionReader = (ActionDataReader)
             subscriber.create_datareader(
-                timetableTopic, Subscriber.DATAREADER_QOS_DEFAULT, timetableListener,
+                recommendedActionTopic, Subscriber.DATAREADER_QOS_DEFAULT, recommendedActionListener,
                 StatusKind.STATUS_MASK_ALL);
-            if (timetableReader == null) {
+            if (recommendedActionReader == null) {
                 System.err.println("create_datareader error\n");
-                return;
-            }
-            
-            windowstateListener = new WindowStateListener();
-            
-            windowstateReader = (WindowStateDataReader)
-            subscriber.create_datareader(
-                windowstateTopic, Subscriber.DATAREADER_QOS_DEFAULT, windowstateListener,
-                StatusKind.STATUS_MASK_ALL);
-            if (windowstateReader == null) {
-                System.err.println("create_datareader error\n");
-                return;
-            }
-            
-            // --- Create writer --- //
-
-            /* To customize data writer QoS, use
-            the configuration file USER_QOS_PROFILES.xml */
-
-            actionWriter = (ActionDataWriter)
-            publisher.create_datawriter(
-                actionTopic, Publisher.DATAWRITER_QOS_DEFAULT,
-                null /* listener */, StatusKind.STATUS_MASK_NONE);
-            if (actionWriter == null) {
-                System.err.println("create_datawriter error\n");
                 return;
             }
 
@@ -291,16 +201,10 @@ public class DecisionLogic {
             InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
 
             final long receivePeriodSec = 5;
-            Action instance = null;
             
             for (int count = 0; (sampleCount == 0) || (count < sampleCount); ++count) {
 
-            	instance = decide(); 
-            	if (instance != null) {
-					System.out.println("Decided Action" + instance.toString());
-					/* Write data */
-	                actionWriter.write(instance, instance_handle);
-				}
+            	control();
             	
                 try {
                     Thread.sleep(receivePeriodSec * 1000);  // in millisec
@@ -335,17 +239,17 @@ public class DecisionLogic {
 
     // =======================================================================
 
-    private static class TemperatureListener extends DataReaderAdapter {
+    private static class FinalActionListener extends DataReaderAdapter {
 
-        TemperatureSeq _dataSeq = new TemperatureSeq();
+        ActionSeq _dataSeq = new ActionSeq();
         SampleInfoSeq _infoSeq = new SampleInfoSeq();
 
         public void on_data_available(DataReader reader) {
-            TemperatureDataReader temperatureReader =
-            (TemperatureDataReader)reader;
+            ActionDataReader finaActionReader =
+            (ActionDataReader)reader;
 
             try {
-                temperatureReader.take(
+            	finaActionReader.take(
                     _dataSeq, _infoSeq,
                     ResourceLimitsQosPolicy.LENGTH_UNLIMITED,
                     SampleStateKind.ANY_SAMPLE_STATE,
@@ -356,31 +260,29 @@ public class DecisionLogic {
                     SampleInfo info = (SampleInfo)_infoSeq.get(i);
 
                     if (info.valid_data) {
-                        Temperature instance = _dataSeq.get(i);
-                        if (instance.SensorID > 999) {
-							temperature = instance;
-						}
+                        Action instance = _dataSeq.get(i);
+						finalAction = instance;
                     }
                 }
             } catch (RETCODE_NO_DATA noData) {
                 // No data to process
             } finally {
-                temperatureReader.return_loan(_dataSeq, _infoSeq);
+            	finaActionReader.return_loan(_dataSeq, _infoSeq);
             }
         }
     }
     
-    private static class TimeTableListener extends DataReaderAdapter {
+    private static class RecommendedActionListener extends DataReaderAdapter {
 
-        TimeTableSeq _dataSeq = new TimeTableSeq();
+        ActionSeq _dataSeq = new ActionSeq();
         SampleInfoSeq _infoSeq = new SampleInfoSeq();
 
         public void on_data_available(DataReader reader) {
-            TimeTableDataReader timeTableReader =
-            (TimeTableDataReader)reader;
+            ActionDataReader recommendedActionReader =
+            (ActionDataReader)reader;
 
             try {
-            	timeTableReader.take(
+            	recommendedActionReader.take(
                     _dataSeq, _infoSeq,
                     ResourceLimitsQosPolicy.LENGTH_UNLIMITED,
                     SampleStateKind.ANY_SAMPLE_STATE,
@@ -391,47 +293,14 @@ public class DecisionLogic {
                     SampleInfo info = (SampleInfo)_infoSeq.get(i);
 
                     if (info.valid_data) {
-                        TimeTable instance = _dataSeq.get(i);
-						timetable = instance;
+                        Action instance = _dataSeq.get(i);
+						recommendedAction = instance;
                     }
                 }
             } catch (RETCODE_NO_DATA noData) {
                 // No data to process
             } finally {
-            	timeTableReader.return_loan(_dataSeq, _infoSeq);
-            }
-        }
-    }
-    
-    private static class WindowStateListener extends DataReaderAdapter {
-
-        WindowStateSeq _dataSeq = new WindowStateSeq();
-        SampleInfoSeq _infoSeq = new SampleInfoSeq();
-
-        public void on_data_available(DataReader reader) {
-            WindowStateDataReader windowStateReader =
-            (WindowStateDataReader)reader;
-
-            try {
-            	windowStateReader.take(
-                    _dataSeq, _infoSeq,
-                    ResourceLimitsQosPolicy.LENGTH_UNLIMITED,
-                    SampleStateKind.ANY_SAMPLE_STATE,
-                    ViewStateKind.ANY_VIEW_STATE,
-                    InstanceStateKind.ANY_INSTANCE_STATE);
-
-                for(int i = 0; i < _dataSeq.size(); ++i) {
-                    SampleInfo info = (SampleInfo)_infoSeq.get(i);
-
-                    if (info.valid_data) {
-                        WindowState instance = _dataSeq.get(i);
-						windowstate = instance;
-                    }
-                }
-            } catch (RETCODE_NO_DATA noData) {
-                // No data to process
-            } finally {
-            	windowStateReader.return_loan(_dataSeq, _infoSeq);
+            	recommendedActionReader.return_loan(_dataSeq, _infoSeq);
             }
         }
     }

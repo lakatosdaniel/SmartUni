@@ -81,34 +81,41 @@ public class Optimalization {
     		action.TimeStamp = Math.max(temperature.TimeStamp, Math.max(recommendedAction.TimeStamp, predictedTemperature.TimeStamp));
     		if(recommendedAction.Action == ActionKind.STOP) {
     			action.Action = ActionKind.STOP;
-    		} else if(recommendedAction.Action == ActionKind.COOL) {
+    		} 
+    		else if(recommendedAction.Action == ActionKind.COOL) {
     			if(predictedTemperature.Prediction == PredictionKind.DECREASE) {
     				if(lastTemperature == null || temperature.Temperature <= lastTemperature.Temperature) {
     					action.Action = ActionKind.STOP;
-    				} else {
+    				} 
+    				else {
     					action.Action = ActionKind.COOL;
     				}
-    			} else if(predictedTemperature.Prediction == PredictionKind.STAGNATE || predictedTemperature.Prediction == PredictionKind.INCREASE) {
+    			} 
+    			else if(predictedTemperature.Prediction == PredictionKind.STAGNATE || predictedTemperature.Prediction == PredictionKind.INCREASE) {
     				action.Action = ActionKind.COOL;
-    			} else {
-    				System.out.println("Error1");
-    				//TODO: Error handling
+    			} 
+    			else {
+    				System.out.println("Error, unable to optimize data.");
     			}
-    		} else if(recommendedAction.Action == ActionKind.HEAT) {
+    		} 
+    		else if(recommendedAction.Action == ActionKind.HEAT) {
     			if(predictedTemperature.Prediction == PredictionKind.INCREASE) {
     				if(lastTemperature == null || temperature.Temperature >= lastTemperature.Temperature) {
     					action.Action = ActionKind.STOP;
-    				} else {
+    				} 
+    				else {
     					action.Action = ActionKind.HEAT;
     				}
-    			} else if(predictedTemperature.Prediction == PredictionKind.STAGNATE || predictedTemperature.Prediction == PredictionKind.DECREASE) {
+    			} 
+    			else if(predictedTemperature.Prediction == PredictionKind.STAGNATE || predictedTemperature.Prediction == PredictionKind.DECREASE) {
     				action.Action = ActionKind.HEAT;
-    			} else {
-    				System.out.println("Error2");
-    				//TODO: Error handling
+    			} 
+    			else {
+    				System.out.println("Error, unable to optimize data.");
     			}
-    		} else {
-    			//TODO: Error handling
+    		} 
+    		else {
+    			System.out.println("Error, unable to optimize data.");
     		}
 		}
     	lastTemperature = temperature;

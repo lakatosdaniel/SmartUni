@@ -1,4 +1,4 @@
-package hu.bme.mit.cps.smartuni.temperaturevalidator;
+package hu.bme.mit.cps.smartuni.firealarm;
 
 import java.util.ArrayList;
 
@@ -16,7 +16,7 @@ import hu.bme.mit.cps.smartuni.TemperatureTypeSupport;
 
 // ===========================================================================
 
-public class TemperatureValidator {
+public class FireAlarm {
     // -----------------------------------------------------------------------
     // Public Methods
     // -----------------------------------------------------------------------
@@ -68,15 +68,7 @@ public class TemperatureValidator {
     	return list;
 	}
     
-    /*private static void printData() {
-    	System.out.println("-----------------------------------");
-    	
-		for(int i = 0; i < data.size(); i++) {
-			System.out.println(data.get(i).toString());
-		}
-	}*/
-        
-    private static Temperature validate() {
+    private static void checkForFire() {
     	int n = 0;
     	Temperature instance = null;
     	
@@ -87,29 +79,38 @@ public class TemperatureValidator {
 			}
 		}
 		
-		if(n > 1) {
+		if (n > 1) {
 			Temperature data1 = data.get(0); 
 			Temperature data2 = data.get(1);
 			if (data1.corresponds(data2)) {
-				if (Math.abs(data1.Temperature - data2.Temperature) <= 5) {
-					instance = new Temperature();
-					instance.SensorID = 1000;
-					instance.Temperature = (data1.Temperature + data2.Temperature) / 2;
-					instance.TimeStamp = Math.max(data1.TimeStamp, data2.TimeStamp);
-				} else {
-					System.out.println("Error, sensor is probably broken.");
+				if (((data1.Temperature + data2.Temperature) / 2) >= 50) {
+		    		System.out.println("Fire alarm triggered.");
 				}
-				
 				data = initData();
 			}
 		}
-    	
-    	return instance;
+		else {
+			for (int i = 0; i < data.size(); i++) {
+				if(data.get(i).SensorID == i) {
+					if (data.get(i).Temperature >= 50) {
+			    		System.out.println("Fire alarm triggered.");
+					}
+				}
+			}
+		}
 	}
+    
+    /*private static void printData() {
+    	System.out.println("-----------------------------------");
+    	
+		for(int i = 0; i < data.size(); i++) {
+			System.out.println(data.get(i).toString());
+		}
+	}*/
     
     // --- Constructors: -----------------------------------------------------
 
-    private TemperatureValidator() {
+    private FireAlarm() {
         super();
     }
 
@@ -119,13 +120,11 @@ public class TemperatureValidator {
 
         DomainParticipant participant = null;
         Subscriber subscriber = null;
-        Publisher publisher = null;
         Topic topic = null;
         DataReaderListener listener = null;
         TemperatureDataReader reader = null;
-        TemperatureDataWriter writer = null;
 
-        data = initData();
+        data = null;
         
         try {
 
@@ -155,19 +154,7 @@ public class TemperatureValidator {
             if (subscriber == null) {
                 System.err.println("create_subscriber error\n");
                 return;
-            }     
-            
-            // --- Create publisher --- //
-
-            /* To customize publisher QoS, use
-            the configuration file USER_QOS_PROFILES.xml */
-            publisher = participant.create_publisher(
-                DomainParticipant.PUBLISHER_QOS_DEFAULT, null /* listener */,
-                StatusKind.STATUS_MASK_NONE);
-            if (publisher == null) {
-                System.err.println("create_publisher error\n");
-                return;
-            }     
+            }       
 
             // --- Create topic --- //
 
@@ -186,20 +173,6 @@ public class TemperatureValidator {
                 System.err.println("create_topic error\n");
                 return;
             }    
-            
-            // --- Create writer --- //
-
-            /* To customize data writer QoS, use
-            the configuration file USER_QOS_PROFILES.xml */
-            
-            writer = (TemperatureDataWriter)
-            publisher.create_datawriter(
-                topic, Publisher.DATAWRITER_QOS_DEFAULT,
-                null /* listener */, StatusKind.STATUS_MASK_NONE);
-            if (writer == null) {
-                System.err.println("create_datawriter error\n");
-                return;
-            }
 
             // --- Create reader --- //
 
@@ -219,18 +192,11 @@ public class TemperatureValidator {
 
             // --- Wait for data --- //
             InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
-            final long receivePeriodSec = 4;
+            final long receivePeriodSec = 5;
 
             for (int count = 0; (sampleCount == 0) || (count < sampleCount); ++count) {
-                //System.out.println("Power subscriber sleeping for "
-                //+ receivePeriodSec + " sec...");
-
-                Temperature valid = validate();
                 
-                if(valid != null) {
-                	System.out.println("Valid Temperature" + valid.toString());
-                	writer.write(valid, instance_handle);
-                }
+                checkForFire();
                 
                 try {
                     Thread.sleep(receivePeriodSec * 1000);  // in millisec

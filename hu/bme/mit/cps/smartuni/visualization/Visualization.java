@@ -1,4 +1,4 @@
-package hu.bme.mit.cps.smartuni.decisionlogic;
+package hu.bme.mit.cps.smartuni.visualization;
 
 
 import com.rti.dds.domain.*;
@@ -8,9 +8,13 @@ import com.rti.dds.subscription.*;
 import com.rti.dds.topic.*;
 
 import hu.bme.mit.cps.smartuni.Action;
-import hu.bme.mit.cps.smartuni.ActionDataWriter;
-import hu.bme.mit.cps.smartuni.ActionKind;
+import hu.bme.mit.cps.smartuni.ActionDataReader;
+import hu.bme.mit.cps.smartuni.ActionSeq;
 import hu.bme.mit.cps.smartuni.ActionTypeSupport;
+import hu.bme.mit.cps.smartuni.PredictedTemperature;
+import hu.bme.mit.cps.smartuni.PredictedTemperatureDataReader;
+import hu.bme.mit.cps.smartuni.PredictedTemperatureSeq;
+import hu.bme.mit.cps.smartuni.PredictedTemperatureTypeSupport;
 import hu.bme.mit.cps.smartuni.Temperature;
 import hu.bme.mit.cps.smartuni.TemperatureDataReader;
 import hu.bme.mit.cps.smartuni.TemperatureSeq;
@@ -23,10 +27,15 @@ import hu.bme.mit.cps.smartuni.WindowState;
 import hu.bme.mit.cps.smartuni.WindowStateDataReader;
 import hu.bme.mit.cps.smartuni.WindowStateSeq;
 import hu.bme.mit.cps.smartuni.WindowStateTypeSupport;
+import hu.bme.mit.cps.smartuni.prediction.Prediction;
 
 // ===========================================================================
 
-public class DecisionLogic {
+public class Visualization {
+	private static String API_KEY = "ac433992054cfd71b3a1cd5e753a6ba5";
+    private static String LOCATION = "Lágymányos"; //Location of BME
+	private static DatabaseHandler dbHandler = new DatabaseHandler();
+	
     // -----------------------------------------------------------------------
     // Public Methods
     // -----------------------------------------------------------------------
@@ -59,65 +68,51 @@ public class DecisionLogic {
     // -----------------------------------------------------------------------
 
     private static Temperature temperature = null;
+    private static PredictedTemperature predictedTemperature = null;
+    private static Action recommendedAction = null;
+    private static Action action = null;
     private static TimeTable timetable = null;
     private static WindowState windowstate = null;
     
     
-    /*private static void initData() {
+    private static void initData() {
     	temperature = null;
+    	predictedTemperature = null;
+    	recommendedAction = null;
+    	action = null;
     	timetable = null;
     	windowstate = null;
     }
     
     private static void printData() {
 		System.out.print("Temperature " + temperature.toString() + "\nTimeTable " + timetable.toString() + "\nWindowState " + windowstate.toString());
-	}*/
+	}
     
-    private static Action decide() {
-    	Action action = null;
-    	
-    	if (temperature != null && timetable != null && windowstate != null) {
+    private static boolean writeToDB() {
+    	if (temperature != null && windowstate != null && action != null && action != null) {
     		
-    		if (Math.abs((temperature.TimeStamp/1000)-(timetable.TimeStamp/1000)) <= 5 &&
-    				Math.abs((temperature.TimeStamp/1000)-(windowstate.TimeStamp/1000)) <= 5 &&
-    				Math.abs((timetable.TimeStamp/1000)-(windowstate.TimeStamp/1000)) <= 5) {
-    			action = new Action();
+    		if (Math.abs((temperature.TimeStamp/1000)-(windowstate.TimeStamp/1000)) <= 5 &&
+    				Math.abs((temperature.TimeStamp/1000)-(action.TimeStamp/1000)) <= 5 &&
+    				Math.abs((windowstate.TimeStamp/1000)-(action.TimeStamp/1000)) <= 5) {
+    			
+    			String windowState = "Closed";
     			if (windowstate.IsOpen) {
-        			action.Action = ActionKind.STOP;
-        		}
-        		else {
-        			if (timetable.Lecture) {
-        				if (temperature.Temperature > 22) {
-        					action.Action = ActionKind.COOL;
-        				}
-        				else if (temperature.Temperature < 16) {
-        					action.Action = ActionKind.HEAT;
-        				}
-        				else {
-        					action.Action = ActionKind.STOP;
-        				}
-        			}
-        			else {
-        				if (temperature.Temperature > 26) {
-        					action.Action = ActionKind.COOL;
-        				}
-        				else if (temperature.Temperature < 14) {
-        					action.Action = ActionKind.HEAT;
-        				}
-        				else {
-        					action.Action = ActionKind.STOP;
-        				}
-        			}
-        		}
-        		action.TimeStamp = Math.max(Math.max(temperature.TimeStamp, timetable.TimeStamp), windowstate.TimeStamp);
-        	}
+    				windowState = "Open";
+    			}
+    			
+    			float outsideTemperature = (float)Prediction.getOutsideTemperature(API_KEY, LOCATION);
+    			
+    			dbHandler.addData(temperature.Temperature, outsideTemperature, windowState, action.Action.toString());
+        		return true;
+    		}
     	}
-    	return action;
+    	
+    	return false;
     }
     
     // --- Constructors: -----------------------------------------------------
 
-    private DecisionLogic() {
+    private Visualization() {
         super();
     }
 
@@ -127,18 +122,26 @@ public class DecisionLogic {
 
         DomainParticipant participant = null;
         Subscriber subscriber = null;
-        Publisher publisher = null;
         Topic temperatureTopic = null;
         Topic timetableTopic = null;
         Topic windowstateTopic = null;
+        Topic recommendedActionTopic = null;
         Topic actionTopic = null;
+        Topic predictedTemperatureTopic = null;
+        
         TemperatureListener temperatureListener = null;
         TimeTableListener timetableListener = null;
         WindowStateListener windowstateListener = null;
+        RecommendedActionListener recommendedActionListener = null;
+        ActionListener actionListener = null;
+        PredictedTemperatureListener predictedTemperatureListener = null;
+        
         TemperatureDataReader temperatureReader = null;
         TimeTableDataReader timetableReader = null;
         WindowStateDataReader windowstateReader = null;
-        ActionDataWriter actionWriter = null;
+        ActionDataReader recommendedActionReader = null;
+        ActionDataReader actionReader = null;
+        PredictedTemperatureDataReader predictedTemperatureReader = null;
         
         try {
 
@@ -155,21 +158,7 @@ public class DecisionLogic {
             if (participant == null) {
                 System.err.println("create_participant error\n");
                 return;
-            } 
-            
-            // --- Create publisher --- //
-
-            /* To customize publisher QoS, use
-            the configuration file USER_QOS_PROFILES.xml */
-
-            publisher = participant.create_publisher(
-                DomainParticipant.PUBLISHER_QOS_DEFAULT, null /* listener */,
-                StatusKind.STATUS_MASK_NONE);
-            if (publisher == null) {
-                System.err.println("create_publisher error\n");
-                return;
-            }  
-            
+            }
 
             // --- Create subscriber --- //
 
@@ -193,7 +182,11 @@ public class DecisionLogic {
             TimeTableTypeSupport.register_type(participant, timetableTypeName);
             String windowstateTypeName = WindowStateTypeSupport.get_type_name(); 
             WindowStateTypeSupport.register_type(participant, windowstateTypeName);
-            String actionTypeName = ActionTypeSupport.get_type_name(); 
+            String recommendedActionTypeName = ActionTypeSupport.get_type_name(); 
+            ActionTypeSupport.register_type(participant, recommendedActionTypeName);
+            String predictedTemperatureTypeName = PredictedTemperatureTypeSupport.get_type_name(); 
+            PredictedTemperatureTypeSupport.register_type(participant, predictedTemperatureTypeName);
+            String actionTypeName = ActionTypeSupport.get_type_name(); //TODO: Kell ez 2x?
             ActionTypeSupport.register_type(participant, actionTypeName);
 
             /* To customize topic QoS, use
@@ -203,7 +196,7 @@ public class DecisionLogic {
                 "TemperatureTopic",
                 temperatureTypeName, DomainParticipant.TOPIC_QOS_DEFAULT,
                 null /* listener */, StatusKind.STATUS_MASK_NONE);
-            if (temperatureTopic == null) {
+            if (temperatureTypeName == null) {
                 System.err.println("create_topic error\n");
                 return;
             }
@@ -227,10 +220,28 @@ public class DecisionLogic {
             }
             
             actionTopic = participant.create_topic(
-                "RecommendedActionTopic",
+                "ActionTopic",
                 actionTypeName, DomainParticipant.TOPIC_QOS_DEFAULT,
                 null /* listener */, StatusKind.STATUS_MASK_NONE);
             if (actionTopic == null) {
+                System.err.println("create_topic error\n");
+                return;
+            }
+            
+            recommendedActionTopic = participant.create_topic(
+                "RecommendedActionTopic",
+                recommendedActionTypeName, DomainParticipant.TOPIC_QOS_DEFAULT,
+                null /* listener */, StatusKind.STATUS_MASK_NONE);
+            if (recommendedActionTopic == null) {
+                System.err.println("create_topic error\n");
+                return;
+            }
+            
+            predictedTemperatureTopic = participant.create_topic(
+                "PredictedTemperatureTopic",
+                predictedTemperatureTypeName, DomainParticipant.TOPIC_QOS_DEFAULT,
+                null /* listener */, StatusKind.STATUS_MASK_NONE);
+            if (predictedTemperatureTopic == null) {
                 System.err.println("create_topic error\n");
                 return;
             }
@@ -273,33 +284,46 @@ public class DecisionLogic {
                 return;
             }
             
-            // --- Create writer --- //
-
-            /* To customize data writer QoS, use
-            the configuration file USER_QOS_PROFILES.xml */
-
-            actionWriter = (ActionDataWriter)
-            publisher.create_datawriter(
-                actionTopic, Publisher.DATAWRITER_QOS_DEFAULT,
-                null /* listener */, StatusKind.STATUS_MASK_NONE);
-            if (actionWriter == null) {
-                System.err.println("create_datawriter error\n");
+            recommendedActionListener = new RecommendedActionListener();
+            
+            recommendedActionReader = (ActionDataReader)
+            subscriber.create_datareader(
+                recommendedActionTopic, Subscriber.DATAREADER_QOS_DEFAULT, recommendedActionListener,
+                StatusKind.STATUS_MASK_ALL);
+            if (recommendedActionReader == null) {
+                System.err.println("create_datareader error\n");
+                return;
+            }
+            
+            actionListener = new ActionListener();
+            
+            actionReader = (ActionDataReader)
+            subscriber.create_datareader(
+                actionTopic, Subscriber.DATAREADER_QOS_DEFAULT, actionListener,
+                StatusKind.STATUS_MASK_ALL);
+            if (actionReader == null) {
+                System.err.println("create_datareader error\n");
+                return;
+            }
+            
+            predictedTemperatureListener = new PredictedTemperatureListener();
+            
+            predictedTemperatureReader = (PredictedTemperatureDataReader)
+            subscriber.create_datareader(
+                predictedTemperatureTopic, Subscriber.DATAREADER_QOS_DEFAULT, predictedTemperatureListener,
+                StatusKind.STATUS_MASK_ALL);
+            if (predictedTemperatureReader == null) {
+                System.err.println("create_datareader error\n");
                 return;
             }
 
             // --- Wait for data --- //
-            InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
-
             final long receivePeriodSec = 5;
-            Action instance = null;
             
             for (int count = 0; (sampleCount == 0) || (count < sampleCount); ++count) {
 
-            	instance = decide(); 
-            	if (instance != null) {
-					System.out.println("Decided Action" + instance.toString());
-					/* Write data */
-	                actionWriter.write(instance, instance_handle);
+            	if (writeToDB()) {
+					System.out.println("Data written to DataBase.");
 				}
             	
                 try {
@@ -432,6 +456,105 @@ public class DecisionLogic {
                 // No data to process
             } finally {
             	windowStateReader.return_loan(_dataSeq, _infoSeq);
+            }
+        }
+    }
+    
+    private static class RecommendedActionListener extends DataReaderAdapter {
+
+        ActionSeq _dataSeq = new ActionSeq();
+        SampleInfoSeq _infoSeq = new SampleInfoSeq();
+
+        public void on_data_available(DataReader reader) {
+            ActionDataReader recommendedActionReader =
+            (ActionDataReader)reader;
+
+            try {
+            	recommendedActionReader.take(
+                    _dataSeq, _infoSeq,
+                    ResourceLimitsQosPolicy.LENGTH_UNLIMITED,
+                    SampleStateKind.ANY_SAMPLE_STATE,
+                    ViewStateKind.ANY_VIEW_STATE,
+                    InstanceStateKind.ANY_INSTANCE_STATE);
+
+                for(int i = 0; i < _dataSeq.size(); ++i) {
+                    SampleInfo info = (SampleInfo)_infoSeq.get(i);
+
+                    if (info.valid_data) {
+                        Action instance = _dataSeq.get(i);
+						recommendedAction = instance;
+                    }
+                }
+            } catch (RETCODE_NO_DATA noData) {
+                // No data to process
+            } finally {
+            	recommendedActionReader.return_loan(_dataSeq, _infoSeq);
+            }
+        }
+    }
+    
+    private static class PredictedTemperatureListener extends DataReaderAdapter {
+
+        PredictedTemperatureSeq _dataSeq = new PredictedTemperatureSeq();
+        SampleInfoSeq _infoSeq = new SampleInfoSeq();
+
+        public void on_data_available(DataReader reader) {
+            PredictedTemperatureDataReader predictedTemperatureReader =
+            (PredictedTemperatureDataReader)reader;
+
+            try {
+            	predictedTemperatureReader.take(
+                    _dataSeq, _infoSeq,
+                    ResourceLimitsQosPolicy.LENGTH_UNLIMITED,
+                    SampleStateKind.ANY_SAMPLE_STATE,
+                    ViewStateKind.ANY_VIEW_STATE,
+                    InstanceStateKind.ANY_INSTANCE_STATE);
+
+                for(int i = 0; i < _dataSeq.size(); ++i) {
+                    SampleInfo info = (SampleInfo)_infoSeq.get(i);
+
+                    if (info.valid_data) {
+                        PredictedTemperature instance = _dataSeq.get(i);
+						predictedTemperature = instance;
+                    }
+                }
+            } catch (RETCODE_NO_DATA noData) {
+                // No data to process
+            } finally {
+            	predictedTemperatureReader.return_loan(_dataSeq, _infoSeq);
+            }
+        }
+    }
+    
+    private static class ActionListener extends DataReaderAdapter {
+
+        ActionSeq _dataSeq = new ActionSeq();
+        SampleInfoSeq _infoSeq = new SampleInfoSeq();
+
+        public void on_data_available(DataReader reader) {
+            ActionDataReader actionReader =
+            (ActionDataReader)reader;
+
+            try {
+            	actionReader.take(
+                    _dataSeq, _infoSeq,
+                    ResourceLimitsQosPolicy.LENGTH_UNLIMITED,
+                    SampleStateKind.ANY_SAMPLE_STATE,
+                    ViewStateKind.ANY_VIEW_STATE,
+                    InstanceStateKind.ANY_INSTANCE_STATE);
+
+                for(int i = 0; i < _dataSeq.size(); ++i) {
+                    SampleInfo info = (SampleInfo)_infoSeq.get(i);
+
+                    if (info.valid_data) {
+                        Action instance = _dataSeq.get(i);
+						action = instance;
+                    }
+                }
+            } catch (RETCODE_NO_DATA noData) {
+                // No data to process
+            } finally {
+            	actionReader.return_loan(_dataSeq, _infoSeq);
             }
         }
     }
