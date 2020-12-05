@@ -4,13 +4,11 @@ import java.util.ArrayList;
 
 import com.rti.dds.domain.*;
 import com.rti.dds.infrastructure.*;
-import com.rti.dds.publication.Publisher;
 import com.rti.dds.subscription.*;
 import com.rti.dds.topic.*;
 
 import hu.bme.mit.cps.smartuni.Temperature;
 import hu.bme.mit.cps.smartuni.TemperatureDataReader;
-import hu.bme.mit.cps.smartuni.TemperatureDataWriter;
 import hu.bme.mit.cps.smartuni.TemperatureSeq;
 import hu.bme.mit.cps.smartuni.TemperatureTypeSupport;
 
@@ -70,8 +68,6 @@ public class FireAlarm {
     
     private static void checkForFire() {
     	int n = 0;
-    	Temperature instance = null;
-    	
     	
 		for (int i = 0; i < data.size(); i++) {
 			if(data.get(i).SensorID == i) {
@@ -124,7 +120,7 @@ public class FireAlarm {
         DataReaderListener listener = null;
         TemperatureDataReader reader = null;
 
-        data = null;
+        data = initData();
         
         try {
 
@@ -191,7 +187,6 @@ public class FireAlarm {
             }                         
 
             // --- Wait for data --- //
-            InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
             final long receivePeriodSec = 5;
 
             for (int count = 0; (sampleCount == 0) || (count < sampleCount); ++count) {

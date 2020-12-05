@@ -1,32 +1,16 @@
 package hu.bme.mit.cps.smartuni.controller;
 
 
-import java.awt.event.ActionListener;
-
 import com.rti.dds.domain.*;
 import com.rti.dds.infrastructure.*;
-import com.rti.dds.publication.Publisher;
 import com.rti.dds.subscription.*;
 import com.rti.dds.topic.*;
 
 import hu.bme.mit.cps.smartuni.Action;
 import hu.bme.mit.cps.smartuni.ActionDataReader;
-import hu.bme.mit.cps.smartuni.ActionDataWriter;
 import hu.bme.mit.cps.smartuni.ActionKind;
 import hu.bme.mit.cps.smartuni.ActionSeq;
 import hu.bme.mit.cps.smartuni.ActionTypeSupport;
-import hu.bme.mit.cps.smartuni.Temperature;
-import hu.bme.mit.cps.smartuni.TemperatureDataReader;
-import hu.bme.mit.cps.smartuni.TemperatureSeq;
-import hu.bme.mit.cps.smartuni.TemperatureTypeSupport;
-import hu.bme.mit.cps.smartuni.TimeTable;
-import hu.bme.mit.cps.smartuni.TimeTableDataReader;
-import hu.bme.mit.cps.smartuni.TimeTableSeq;
-import hu.bme.mit.cps.smartuni.TimeTableTypeSupport;
-import hu.bme.mit.cps.smartuni.WindowState;
-import hu.bme.mit.cps.smartuni.WindowStateDataReader;
-import hu.bme.mit.cps.smartuni.WindowStateSeq;
-import hu.bme.mit.cps.smartuni.WindowStateTypeSupport;
 
 // ===========================================================================
 
@@ -197,8 +181,6 @@ public class Controller {
                 return;
             }
 
-            // --- Wait for data --- //
-            InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
 
             final long receivePeriodSec = 5;
             

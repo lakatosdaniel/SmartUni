@@ -3,7 +3,6 @@ package hu.bme.mit.cps.smartuni.visualization;
 
 import com.rti.dds.domain.*;
 import com.rti.dds.infrastructure.*;
-import com.rti.dds.publication.Publisher;
 import com.rti.dds.subscription.*;
 import com.rti.dds.topic.*;
 

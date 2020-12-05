@@ -12,10 +12,6 @@
 
 package hu.bme.mit.cps.smartuni.windowsensor;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 
 /* ActionPublisher.java
 
@@ -64,27 +60,14 @@ java -Djava.ext.dirs=$NDDSHOME/lib/java ActionPublisher <domain_id>
 
 java -Djava.ext.dirs=$NDDSHOME/lib/java ActionSubscriber <domain_id>        
 */
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Random;
 
 import com.rti.dds.domain.*;
 import com.rti.dds.infrastructure.*;
 import com.rti.dds.publication.*;
 import com.rti.dds.topic.*;
-import com.rti.ndds.config.*;
 
-import hu.bme.mit.cps.smartuni.Temperature;
-import hu.bme.mit.cps.smartuni.TemperatureDataWriter;
-import hu.bme.mit.cps.smartuni.TemperatureTypeSupport;
 import hu.bme.mit.cps.smartuni.WindowState;
 import hu.bme.mit.cps.smartuni.WindowStateDataWriter;
 import hu.bme.mit.cps.smartuni.WindowStateTypeSupport;
@@ -212,8 +195,6 @@ public class WindowSensor {
             /* Create data sample for writing */
             WindowState instance = new WindowState();
             
-            Calendar calendar = Calendar.getInstance();
-            
             InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
             /* For a data type that has a key, if the same instance is going to be
             written multiple times, initialize the key here
@@ -235,7 +216,7 @@ public class WindowSensor {
 
                 instance.SensorID = number;
                 instance.IsOpen = isOpen;
-                instance.TimeStamp = calendar.getInstance().getTimeInMillis();                
+                instance.TimeStamp = Calendar.getInstance().getTimeInMillis();                
                 
                 System.out.println("Writing WindowState" + instance.toString());
                 
