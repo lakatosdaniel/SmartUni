@@ -97,25 +97,28 @@ public class TemperatureValidator {
 					instance.Temperature = (data1.Temperature + data2.Temperature) / 2;
 					instance.TimeStamp = Math.max(data1.TimeStamp, data2.TimeStamp);
 				} else {
-					System.out.println("Error, sensor is probably broken.");
+					System.out.println("Warning, one sensor is probably broken (difference is greater than 5 degrees).");
 				}
-				
 				data = initData();
 			}
 		}
 		else {
-			System.out.println("Warning, only one sensor data is available.");
 			if (data.get(0).SensorID == 0) {
+				System.out.println("Warning, only one sensor data is available.");
 				instance = new Temperature();
 				instance.SensorID = 1001;
 				instance.Temperature = data.get(0).Temperature;
 				instance.TimeStamp = data.get(0).TimeStamp;
 			}
 			else if (data.get(1).SensorID == 1) {
+				System.out.println("Warning, only one sensor data is available.");
 				instance = new Temperature();
 				instance.SensorID = 1002;
 				instance.Temperature = data.get(1).Temperature;
 				instance.TimeStamp = data.get(1).TimeStamp;
+			}
+			else {
+				System.out.println("Error, no sensor data available.");
 			}
 		}
     	
@@ -234,17 +237,18 @@ public class TemperatureValidator {
 
             // --- Wait for data --- //
             InstanceHandle_t instance_handle = InstanceHandle_t.HANDLE_NIL;
-            final long receivePeriodSec = 4;
+            final long receivePeriodSec = 5;
 
             for (int count = 0; (sampleCount == 0) || (count < sampleCount); ++count) {
-                //System.out.println("Power subscriber sleeping for "
-                //+ receivePeriodSec + " sec...");
 
                 Temperature valid = validate();
                 
-                if(valid != null) {
+                if (valid != null) {
                 	System.out.println("Valid Temperature" + valid.toString());
                 	writer.write(valid, instance_handle);
+                }
+                else {
+                	System.out.println("No data received, sleeping for " + receivePeriodSec + " sec...");
                 }
                 
                 try {

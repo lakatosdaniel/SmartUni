@@ -1,6 +1,8 @@
 package hu.bme.mit.cps.smartuni.visualization;
 
 
+import java.util.ArrayList;
+
 import com.rti.dds.domain.*;
 import com.rti.dds.infrastructure.*;
 import com.rti.dds.subscription.*;
@@ -74,7 +76,7 @@ public class Visualization {
     private static WindowState windowstate = null;
     
     
-    private static void initData() {
+    /*private static void initData() {
     	temperature = null;
     	predictedTemperature = null;
     	recommendedAction = null;
@@ -85,25 +87,46 @@ public class Visualization {
     
     private static void printData() {
 		System.out.print("Temperature " + temperature.toString() + "\nTimeTable " + timetable.toString() + "\nWindowState " + windowstate.toString());
-	}
+	}*/
     
     private static boolean writeToDB() {
-    	if (temperature != null && windowstate != null && action != null && action != null) {
+    	if (temperature != null && predictedTemperature != null && recommendedAction != null 
+    			&& action != null && timetable != null && windowstate != null) {
     		
-    		if (Math.abs((temperature.TimeStamp/1000)-(windowstate.TimeStamp/1000)) <= 5 &&
-    				Math.abs((temperature.TimeStamp/1000)-(action.TimeStamp/1000)) <= 5 &&
-    				Math.abs((windowstate.TimeStamp/1000)-(action.TimeStamp/1000)) <= 5) {
-    			
-    			String windowState = "Closed";
-    			if (windowstate.IsOpen) {
-    				windowState = "Open";
+    		ArrayList<Long> timestamps = new ArrayList<Long>();
+    		timestamps.add(temperature.TimeStamp);
+    		timestamps.add(predictedTemperature.TimeStamp);
+    		timestamps.add(recommendedAction.TimeStamp);
+    		timestamps.add(action.TimeStamp);
+    		timestamps.add(timetable.TimeStamp);
+    		timestamps.add(windowstate.TimeStamp);
+    		
+    		for (long timestamp : timestamps) {
+    			for (long timestamp_other : timestamps) {
+    				if (Math.abs((timestamp/1000)-(timestamp_other/1000)) > 5) {
+    					System.out.println("Warning, mismatch in received data timestamps.");
+    					return false;
+    				}
     			}
-    			
-    			float outsideTemperature = (float)Prediction.getOutsideTemperature(API_KEY, LOCATION);
-    			
-    			dbHandler.addData(temperature.Temperature, outsideTemperature, windowState, action.Action.toString());
-        		return true;
     		}
+    			
+			String windowState = "Closed";
+			if (windowstate.IsOpen) {
+				windowState = "Open";
+			}
+			
+			String lectureState = "No";
+			if (timetable.Lecture) {
+				lectureState = "Yes";
+			}
+			
+			float outsideTemperature = (float)Prediction.getOutsideTemperature(API_KEY, LOCATION);
+			
+			dbHandler.addData(temperature.Temperature, outsideTemperature, 
+					predictedTemperature.Prediction.toString(), windowState, lectureState, 
+					recommendedAction.Action.toString(), action.Action.toString());
+			
+    		return true;
     	}
     	
     	return false;

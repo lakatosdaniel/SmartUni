@@ -20,13 +20,17 @@ public class DatabaseHandler {
 		databaseConnection.enableBatch(BatchOptions.DEFAULTS);
 	}
 	
-	public void addData(float insideTemperature, float outsideTemperature, String windowState, String action){
+	public void addData(float insideTemperature, float outsideTemperature, String predictedChange, 
+			String windowState, String lectureState, String recommendedAction, String finalAction){
 		databaseConnection.write(Point.measurement("smartuni")
         	    .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
         	    .addField("insideTemperature", insideTemperature)
         	    .addField("outsideTemperature", outsideTemperature)
-        	    .addField("windowState", windowState)
-        	    .addField("action", action)
+        	    .addField("predictedChange", predictedChange)
+        	    .addField("window", windowState)
+        	    .addField("lecture", lectureState)
+        	    .addField("recommendedAction", recommendedAction)
+        	    .addField("finalAction", finalAction)
         	    .build());
 	}
 }

@@ -66,7 +66,8 @@ public class FireAlarm {
     	return list;
 	}
     
-    private static void checkForFire() {
+    private static boolean checkForFire() {
+    	boolean fire = false;
     	int n = 0;
     	
 		for (int i = 0; i < data.size(); i++) {
@@ -81,6 +82,7 @@ public class FireAlarm {
 			if (data1.corresponds(data2)) {
 				if (((data1.Temperature + data2.Temperature) / 2) >= 50) {
 		    		System.out.println("Fire alarm triggered.");
+		    		fire = true;
 				}
 				data = initData();
 			}
@@ -88,12 +90,16 @@ public class FireAlarm {
 		else {
 			for (int i = 0; i < data.size(); i++) {
 				if(data.get(i).SensorID == i) {
+					System.out.println("Warning, only one sensor data is available!");
 					if (data.get(i).Temperature >= 50) {
 			    		System.out.println("Fire alarm triggered.");
+			    		fire = true;
 					}
 				}
 			}
 		}
+		
+		return fire;
 	}
     
     /*private static void printData() {
@@ -191,7 +197,9 @@ public class FireAlarm {
 
             for (int count = 0; (sampleCount == 0) || (count < sampleCount); ++count) {
                 
-                checkForFire();
+                if (!checkForFire()) {
+                	System.out.println("No sense of fire, sleeping for " + receivePeriodSec + " sec...");
+                }
                 
                 try {
                     Thread.sleep(receivePeriodSec * 1000);  // in millisec

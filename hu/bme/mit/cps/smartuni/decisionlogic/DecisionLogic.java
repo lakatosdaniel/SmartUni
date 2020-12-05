@@ -178,7 +178,7 @@ public class DecisionLogic {
     		action.TimeStamp = temperature.TimeStamp;
     	}
     	else {
-    		System.out.println("Error, no data is available!");
+    		System.out.println("Error, no data available!");
     	}
     	return action;
     }

@@ -263,6 +263,9 @@ public class Prediction {
 					/* Write data */
 	                predictionWriter.write(instance, instance_handle);
 				}
+            	else {
+            		System.out.println("No data received, sleeping for " + receivePeriodSec + " sec...");
+            	}
             	
                 try {
                     Thread.sleep(receivePeriodSec * 1000);  // in millisec

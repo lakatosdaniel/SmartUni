@@ -247,7 +247,7 @@ public class TemperatureSensor {
                 
                 n++;
                 
-                if(n == data.size()) {
+                if (n == data.size()) {
                 	n = 0;
                 }
                 
