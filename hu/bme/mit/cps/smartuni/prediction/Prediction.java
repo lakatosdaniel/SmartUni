@@ -105,11 +105,10 @@ public class Prediction {
 	}*/
     
     private static PredictedTemperature predict() {
-    	PredictedTemperature prediction = null;
+    	PredictedTemperature prediction = new PredictedTemperature();
+    	double outsideTemp = getOutsideTemperature(API_KEY, LOCATION);
     	
     	if (insideTemperature != null) {
-    		prediction = new PredictedTemperature();
-    		double outsideTemp = getOutsideTemperature(API_KEY, LOCATION);
     		if(outsideTemp == 200) {
     			System.out.println("Error, invalid API data.");
     		}
@@ -122,6 +121,18 @@ public class Prediction {
         			prediction.Prediction = PredictionKind.DECREASE;
         		}
         		prediction.TimeStamp = insideTemperature.TimeStamp;
+    		}
+    	}
+    	else {
+    		System.out.println("Warning, inside temperature data is not available.");
+    		if (outsideTemp > 30) {
+    			prediction.Prediction = PredictionKind.INCREASE;
+    		} 
+    		else if(outsideTemp < 10) {
+    			prediction.Prediction = PredictionKind.DECREASE;
+    		}
+    		else {
+    			prediction.Prediction = PredictionKind.STAGNATE;
     		}
     	}
     	return prediction;
