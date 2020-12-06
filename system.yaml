@@ -1,0 +1,155 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+    name: cps-smartuni-temperaturesensor0
+spec:
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                project: smartuni
+        spec:
+            hostNetwork: true
+            containers:                    
+              - name: temperaturesensor0
+                image: cps-smartuni-temperaturesensor0
+                ports:
+                  - containerPort: 7400
+                    hostPort: 7400
+                imagePullPolicy: Never
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+    name: cps-smartuni-temperaturesensor1
+spec:
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                project: smartuni
+        spec:
+            hostNetwork: true
+            containers:
+              - name: temperaturesensor1
+                image: cps-smartuni-temperaturesensor1
+                imagePullPolicy: Never
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+    name: cps-smartuni-timetablsesource
+spec:
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                project: smartuni
+        spec:
+            hostNetwork: true
+            containers:
+              - name: timetablsesource
+                image: cps-smartuni-timetablsesource
+                imagePullPolicy: Never
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+    name: cps-smartuni-windowsensor
+spec:
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                project: smartuni
+        spec:
+            hostNetwork: true
+            containers:
+              - name: windowsensor
+                image: cps-smartuni-windowsensor
+                imagePullPolicy: Never
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+    name: cps-smartuni-temperaturevalidator
+spec:
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                project: smartuni
+        spec:
+            hostNetwork: true
+            containers:
+              - name: temperaturevalidator
+                image: cps-smartuni-temperaturevalidator
+                imagePullPolicy: Never
+                ---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+    name: cps-smartuni-temperaturevalidator
+spec:
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                project: smartuni
+        spec:
+            hostNetwork: true
+            containers:
+              - name: temperaturevalidator
+                image: cps-smartuni-temperaturevalidator
+                imagePullPolicy: Never
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+    name: cps-smartuni-firealarm
+spec:
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                project: smartuni
+        spec:
+            hostNetwork: true
+            containers:
+              - name: firealarm
+                image: cps-smartuni-firealarm
+                imagePullPolicy: Never
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+    name: cps-smartuni-controller
+spec:
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                project: smartuni
+        spec:
+            hostNetwork: true
+            containers:
+              - name: controller
+                image: cps-smartuni-controller
+                imagePullPolicy: Never
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+    name: cps-smartuni-decisionlogic
+spec:
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                project: smartuni
+        spec:
+            hostNetwork: true
+            containers:
+              - name: decisionlogic
+                image: cps-smartuni-decisionlogic
+                imagePullPolicy: Never

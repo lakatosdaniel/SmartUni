@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Created-By: Rorck
+Class-Path: /smartuni/libs/nddsjava.jar /smartuni/libs
+Main-Class: hu.bme.mit.cps.smartuni.temperaturesensor.TemperatureSensor
