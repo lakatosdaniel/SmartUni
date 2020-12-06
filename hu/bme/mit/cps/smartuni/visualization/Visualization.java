@@ -89,8 +89,6 @@ public class Visualization {
 		System.out.print("Temperature " + temperature.toString() + "\nTimeTable " + timetable.toString() + "\nWindowState " + windowstate.toString());
 	}*/
     
-    private static float outsideTempChange = (float)-0.3;
-    private static float outsideTemperature = (float)12.4;
     private static boolean writeToDB() {
     	if (temperature != null && predictedTemperature != null && recommendedAction != null 
     			&& action != null && timetable != null && windowstate != null) {
@@ -122,15 +120,7 @@ public class Visualization {
 				lectureState = "Yes";
 			}
 			
-			//float outsideTemperature = (float)Prediction.getOutsideTemperature(API_KEY, LOCATION);
-			outsideTemperature += outsideTempChange;
-			
-			if (outsideTemperature < -3) {
-				outsideTempChange = (float)0.4;
-			}
-			if (outsideTemperature > 13) {
-				outsideTempChange = 0;
-			}
+			float outsideTemperature = (float)Prediction.getOutsideTemperature(API_KEY, LOCATION);
 			
 			dbHandler.addData(temperature.Temperature, outsideTemperature, 
 					predictedTemperature.Prediction.toString(), windowState, lectureState, 
